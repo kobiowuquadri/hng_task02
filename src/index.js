@@ -1,7 +1,6 @@
 import dotenv from 'dotenv'
 dotenv.config()
 import express from 'express'
-import { connectToDB } from './database/db.js'
 import { handleErrors } from './middlewares/errorHandler.js'
 import { authRoutes } from './routes/auth-routes.js'
 import helmet from 'helmet'
@@ -49,7 +48,6 @@ app.get('/', (req, res) => {
 app.use(handleErrors)
 
 // connect to database
-connectToDB()
 
 
 app.listen(port, ()=> {
