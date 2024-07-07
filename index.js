@@ -15,8 +15,8 @@ const app = express()
 const port = process.env.PORT
 
 // helmet to secure app by setting http response headers
-app.use(helmet());
-app.use(morgan('tiny'));
+app.use(helmet())
+app.use(morgan('tiny'))
 
 let limiter = rateLimit({
   max: 1000,

@@ -6,6 +6,6 @@ export const handleErrors = (error, res) => {
     return res.status(400).json({ success: false, error: 'Database error', details: error.message })
   } else {
     console.error(error)
-    return res.status(500).json({ success: false, error: 'Something went wrong, please try again.' });
+    return res.status(500).json({ success: false, error: 'Something went wrong, please try again.' })
   }
 }

@@ -17,13 +17,17 @@ export const userRegister = async (req, res) => {
 
     // existing user
     const existingUser = await db.select().from(User, 'users').where(eq(User.email, email)).execute() 
-    if (existingUser[0].email === email ){
-      return res.status(401).json({
-        status: "failed",
-        message: "User with this email already exists"
+    if (existingUser > 0 ){
+      return res.status(422).json({
+        errors: [
+          {
+            field: 'email',
+            message: "User with this email already exists"
+          }
+        ]
       })
     }
-    
+
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // console.log(userId)
@@ -37,14 +41,17 @@ export const userRegister = async (req, res) => {
       phone
     }).returning().execute()
 
+    const orgId = uuidv4()
+    console.log("orgId", orgId)
     const orgName = `${firstName}'s Organisation`
     await db.insert(organisation).values({
+      orgId,
       name: orgName,
       description: `${firstName}'s default organisation`,
       userId: user[0].userId
     }).execute()
 
-    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' })
+    const token = jwt.sign({ userId: user[0].userId }, process.env.JWT_SECRET, { expiresIn: '1h' })
 
     res.status(201).json({
       status: 'success',
@@ -97,7 +104,7 @@ export const userLogin = async (req, res) => {
       })
     }
 
-    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' })
+    const token = jwt.sign({ userId: result[0].userId }, process.env.JWT_SECRET, { expiresIn: '1h' })
 
     res.status(200).json({
       status: 'success',

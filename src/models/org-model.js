@@ -1,7 +1,8 @@
-import { pgTable, varchar, serial } from 'drizzle-orm/pg-core';
+import { pgTable, text, uuid } from 'drizzle-orm/pg-core';
 
 export const organisation = pgTable('organisations', {
-  orgId: serial('orgId').primaryKey(),
-  name: varchar('name').notNull(),
-  description: varchar('description'),
+  orgId: text('orgId').primaryKey().default(`uuid_generate_v4()`),
+  name: text('name').notNull(),
+  description: text('description'),
+  userId:  uuid('userId').notNull()
 })
