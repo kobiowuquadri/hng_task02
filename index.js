@@ -1,15 +1,15 @@
 import dotenv from 'dotenv';
 dotenv.config()
 import express from 'express';
-import { handleErrors } from './middlewares/errorHandler.js';
-import { authRoutes } from './routes/auth-routes.js';
+import { authRoutes } from './src/routes/auth-routes.js';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
-import { db } from './config/db.js';
+import { db } from './src/config/db.js';
 import { sql } from 'drizzle-orm';
-import { orgRoutes } from './routes/org-routes.js';
+import { orgRoutes } from './src/routes/org-routes.js';
+import { handleErrors } from './src/middlewares/errorHandler.js';
 
 const app = express()
 const port = process.env.PORT
