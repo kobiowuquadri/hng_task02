@@ -4,6 +4,7 @@ import { db } from '../config/db.js';
 import { User } from '../models/auth-model.js';
 import { organisation } from '../models/org-model.js';
 import { v4 as uuidv4 } from 'uuid';
+import { eq } from 'drizzle-orm';
 
 
 
@@ -13,6 +14,7 @@ export const userRegister = async (req, res) => {
     const userId = uuidv4()
     const { firstName, lastName, email, password, phone } = req.body   
     // console.log(req.body) 
+
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // console.log(userId)
@@ -30,7 +32,7 @@ export const userRegister = async (req, res) => {
     await db.insert(organisation).values({
       name: orgName,
       description: `${firstName}'s default organisation`,
-      userId
+      userId: user[0].userId
     }).execute()
 
     const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' })
@@ -63,24 +65,26 @@ export const userRegister = async (req, res) => {
 export const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body
-    // existing user
-    const user = await db.select(User).where(User.email.equals(email)).execute()
 
-    if (user.length === 0) {
+    const query = db.select().from(User, 'users').where(eq(User.email, email))
+    const result = await query.execute()
+    // console.log("result", result)
+
+    if (result.length === 0) {
       return res.status(401).json({
         status: 'Bad request',
         message: 'Authentication failed',
-        statusCode: 401
+        statusCode: 401,
+        msg: 'User not found'
       })
     }
-
-    const isPasswordValid = await bcrypt.compare(password, user[0].password)
+    const isPasswordValid = await bcrypt.compare(password, result[0].password);
 
     if (!isPasswordValid) {
       return res.status(401).json({
         status: 'Bad request',
         message: 'Authentication failed',
-        statusCode: 401
+        statusCode: 401,
       })
     }
 
@@ -92,19 +96,21 @@ export const userLogin = async (req, res) => {
       data: {
         accessToken: token,
         user: {
-          userId: user[0].userId,
-          firstName: user[0].firstName,
-          lastName: user[0].lastName,
-          email: user[0].email,
-          phone: user[0].phone,
+          userId: result[0].userId,
+          firstName: result[0].firstName,
+          lastName: result[0].lastName,
+          email: result[0].email,
+          phone: result[0].phone
         }
       }
     })
   } catch (error) {
+    console.error('Login error:', error);
     res.status(400).json({
       status: 'Bad request',
       message: 'Authentication failed',
-      statusCode: 401
+      statusCode: 401,
+      msg: error.message
     })
   }
 }
