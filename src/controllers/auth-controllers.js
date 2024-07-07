@@ -15,6 +15,15 @@ export const userRegister = async (req, res) => {
     const { firstName, lastName, email, password, phone } = req.body   
     // console.log(req.body) 
 
+    // existing user
+    const existingUser = await db.select().from(User, 'users').where(eq(User.email, email)).execute() 
+    if (existingUser[0].email === email ){
+      return res.status(401).json({
+        status: "failed",
+        message: "User with this email already exists"
+      })
+    }
+    
     const hashedPassword = await bcrypt.hash(password, 10)
 
     // console.log(userId)
