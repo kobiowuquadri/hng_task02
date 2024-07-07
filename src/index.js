@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config()
 import express from 'express';
 import { handleErrors } from './middlewares/errorHandler.js';
 import { authRoutes } from './routes/auth-routes.js';
@@ -9,6 +9,7 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { db } from './config/db.js';
 import { sql } from 'drizzle-orm';
+import { orgRoutes } from './routes/org-routes.js';
 
 const app = express()
 const port = process.env.PORT
@@ -39,6 +40,7 @@ app.use(cors(corsOptions))
 
 // routes
 app.use('/api/v1/auth', authRoutes)
+app.use('api/v1/org', orgRoutes)
 
 // home
 app.get('/', (req, res) => {
@@ -52,7 +54,7 @@ app.use(handleErrors)
 async function testDatabaseConnection() {
   try {
     const result = await db.execute(sql`SELECT NOW()`)
-    console.log('Database connection successfully')
+    console.log('Database connected successfully')
   } catch (error) {
     console.error('Database connection error:', error.message)
   }
@@ -61,5 +63,5 @@ async function testDatabaseConnection() {
 testDatabaseConnection()
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Server running on port ${port}`)
 })

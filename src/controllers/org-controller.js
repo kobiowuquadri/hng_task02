@@ -1,9 +1,6 @@
 import express from 'express';
 import { db } from '../config/db.js';
-import organisation from '../models/organisation.js';
-import { verify } from '../middlewares/auth-middleware.js';
-
-const router = express.Router();
+import { organisation } from '../models/org-model.js';
 
 
 
@@ -26,10 +23,12 @@ export const getOrg = async (req, res) => {
   }
 }
 
-router.get('/:orgId', authMiddleware, async (req, res) => {
-  const { orgId } = req.params;
+
+
+export const getOrgById = async (req, res) => {
+  const { orgId } = req.params
   try {
-    const org = await db.select(organisation).where(organisations.orgId.equals(orgId)).execute();
+    const org = await db.select(organisation).where(organisation.orgId.equals(orgId)).execute()
     if (org.length === 0) {
       return res.status(404).json({
         status: 'Bad request',
@@ -49,6 +48,4 @@ router.get('/:orgId', authMiddleware, async (req, res) => {
       statusCode: 400
     })
   }
-})
-
-export default router
+}
