@@ -12,7 +12,7 @@ import { orgRoutes } from './src/routes/org-routes.js';
 import { handleErrors } from './src/middlewares/errorHandler.js';
 
 const app = express()
-const port = process.env.PORT
+const port = process.env.PORT || 2000
 
 // helmet to secure app by setting http response headers
 app.use(helmet())
@@ -50,18 +50,20 @@ app.get('/', (req, res) => {
 // error handler
 app.use(handleErrors)
 
-// connect to database
+// Connect to database
 async function testDatabaseConnection() {
   try {
-    const result = await db.execute(sql`SELECT NOW()`)
-    console.log('Database connected successfully')
+    const result = await db.execute(sql`SELECT NOW()`);
+    console.log('Database connected successfully');
   } catch (error) {
-    console.error('Database connection error:', error.message)
+    console.error('Database connection error:', error.message);
   }
 }
 
-testDatabaseConnection()
+testDatabaseConnection();
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`)
-})
+const server = app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
+
+export { app, server };
