@@ -1,47 +1,10 @@
-import { Model, Column, DataType } from "drizzle-orm";
+import { pgTable, varchar, serial } from 'drizzle-orm/pg-core';
 
-
-class User extends Model {
-  static tableName = 'users';
-
-  @Column({
-    type: DataType.STRING,
-    primaryKey: true,
-    unique: true
-  })
-  userId;
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: false
-  })
-  firstName;
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: false
-  })
-  lastName;
-
-  @Column({
-    type: DataType.STRING,
-    unique: true,
-    allowNull: false
-  })
-  email;
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: false
-  })
-  password;
-
-  @Column({
-    type: DataType.STRING,
-  })
-  phoneNumber;
-
-}
-
-
-export default User
+export const users = pgTable('users', {
+  userId: serial('user_id').primaryKey(),
+  firstName: varchar('first_name').notNull(),
+  lastName: varchar('last_name').notNull(),
+  email: varchar('email').unique().notNull(),
+  password: varchar('password').notNull(),
+  phone: varchar('phone'),
+})

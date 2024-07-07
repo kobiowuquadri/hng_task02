@@ -1,19 +1,21 @@
-import dotenv from 'dotenv'
-dotenv.config()
-import express from 'express'
-import { handleErrors } from './middlewares/errorHandler.js'
-import { authRoutes } from './routes/auth-routes.js'
-import helmet from 'helmet'
-import cors from 'cors'
-import morgan from 'morgan'
-import rateLimit from 'express-rate-limit'
+import dotenv from 'dotenv';
+dotenv.config();
+import express from 'express';
+import { handleErrors } from './middlewares/errorHandler.js';
+import { authRoutes } from './routes/auth-routes.js';
+import helmet from 'helmet';
+import cors from 'cors';
+import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
+import { db } from './config/db.js';
+import { sql } from 'drizzle-orm';
 
 const app = express()
 const port = process.env.PORT
 
 // helmet to secure app by setting http response headers
 app.use(helmet());
-app.use(morgan('tiny'))
+app.use(morgan('tiny'));
 
 let limiter = rateLimit({
   max: 1000,
@@ -21,17 +23,16 @@ let limiter = rateLimit({
   message: "We have received too many requests from this IP. Please try again after one hour."
 })
 
-
 // middlewares
 app.use('/api', limiter)
 app.use(express.json())
-app.use(express.urlencoded({extended: true}))
+app.use(express.urlencoded({ extended: true }))
 
 // cors config
 const corsOptions = {
-  origin: ['http://localhost:5000'],
+  origin: ['http://localhost:5173', 'http://localhost:3000' ],
   optionsSuccessStatus: 200,
-  credentiasl: true,  
+  credentiasl: true,
 }
 
 app.use(cors(corsOptions))
@@ -41,15 +42,24 @@ app.use('/api/v1/auth', authRoutes)
 
 // home
 app.get('/', (req, res) => {
-  res.json({success: true, message: 'Backend Connected Successfully'})
+  res.json({ success: true, message: 'Backend Connected Successfully' });
 })
 
 // error handler
 app.use(handleErrors)
 
 // connect to database
+async function testDatabaseConnection() {
+  try {
+    const result = await db.execute(sql`SELECT NOW()`)
+    console.log('Database connection successfully')
+  } catch (error) {
+    console.error('Database connection error:', error.message)
+  }
+}
 
+testDatabaseConnection()
 
-app.listen(port, ()=> {
-  console.log(`Server running on port ${port}`)
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 })

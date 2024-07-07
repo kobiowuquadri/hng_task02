@@ -1,168 +1,105 @@
-import bcrypt from 'bcryptjs'
-import { passwordValidator, sanitizePhoneNumber, cloudinary, sendEmail } from '../utils/index.js'
-import { handleErrors } from '../middlewares/errorHandler.js'
-import { authModel } from '../models/auth-model.js'
-import jwt from 'jsonwebtoken'
-
-const period = 60 * 60 * 24 * 3
-const baseUrl = 'http://localhost:5000/api/v1/auth'
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { db } from '../config/db.js';
+import { users } from '../models/auth-model.js';
+import { organisations } from '../models/org-model.js';
 
 
-export const registerUser = async (req, res) => {
+
+
+export const userRegister = async (req, res) => {
   try {
-    const { email, password, phoneNumber } = req.body    
+    const { firstName, lastName, email, password, phone } = req.body    
+    const hashedPassword = await bcrypt.hash(password, 10)
 
-    const existingUser = await authModel.findOne({ email })
-    if (existingUser) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Email already exists.' })
-    }
-    
-   // Validate phone number
-    const sanitizedPhone = sanitizePhoneNumber(phoneNumber)
-    if (!sanitizedPhone.status) {
-      return res.status(400).json({ success: false, message: sanitizedPhone.message })
-    }
-
-    // Validate password
-    if (!passwordValidator(password)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password must contain at least one lowercase letter, one uppercase letter, one digit, one symbol (@#$%^&*!), and have a minimum length of 8 characters'
-      })
-    }
-
-    const hashPassword = await bcrypt.hash(password, 10)  
-
-    let imageUrl = authModel.schema.path('profilePics').defaultValue
-    if (req.file && req.file.path){
-      const uploadRes = await cloudinary.uploader.upload(req.file.path, {
-        upload_preset: 'express-mvc-starter'
-      })
-  
-       imageUrl = uploadRes.secure_url
-    }
-    
-
-    const newUser = authModel({
+    const user = await db.insert(users).values({
+      firstName,
+      lastName,
       email,
-      password: hashPassword,
-      phoneNumber: sanitizedPhone.phone,
-      profilePics: imageUrl
-    }) 
+      password: hashedPassword,
+      phone
+    }).returning().execute()
 
-    const subject = 'Welcome to New Comapany'
-    const text = 'Thank you for registering with us!'
-    const template = 'welcomeMessage'    
+    const userId = user[0].userId
 
-    const savedUser = await newUser.save()
-    await sendEmail(email, subject, text, template)
-    res
-      .status(201)
-      .json({ success: true, message: 'Account Created Successfully', savedUser })
+    const orgName = `${firstName}'s Organisation`
+    await db.insert(organisations).values({
+      name: orgName,
+      description: `${firstName}'s default organisation`
+    }).execute()
+
+    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' })
+
+    res.status(201).json({
+      status: 'success',
+      message: 'Registration successful',
+      data: {
+        accessToken: token,
+        user: {
+          userId,
+          firstName,
+          lastName,
+          email,
+          phone,
+        }
+      }
+    })
   } catch (error) {
-    handleErrors(error, res)
+    res.status(400).json({
+      status: 'Bad request',
+      message: 'Registration unsuccessful',
+      statusCode: 400
+    })
   }
 }
 
-export const loginUser = async (req, res) => {
+
+export const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body
-    const user = await authModel.findOne({ email })
+    // existing user
+    const user = await db.select(users).where(users.email.equals(email)).execute()
 
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'user with the email or password not found' })
+    if (user.length === 0) {
+      return res.status(401).json({
+        status: 'Bad request',
+        message: 'Authentication failed',
+        statusCode: 401
+      })
     }
-    const checkPassword = await bcrypt.compare(password, user.password)
-    if (!checkPassword) {
-      return res
-        .status(401)
-        .json({ success: false, message: 'Invalid Password' })
+
+    const isPasswordValid = await bcrypt.compare(password, user[0].password)
+
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        status: 'Bad request',
+        message: 'Authentication failed',
+        statusCode: 401
+      })
     }
-    jwt.sign(
-      { id: user._id },
-      process.env.SECRET,
-      { expiresIn: '1hr' },
-      async (err, token) => {
-        if (err) {
-          throw err
+
+    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' })
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Login successful',
+      data: {
+        accessToken: token,
+        user: {
+          userId: user[0].userId,
+          firstName: user[0].firstName,
+          lastName: user[0].lastName,
+          email: user[0].email,
+          phone: user[0].phone,
         }
-        res.cookie('userId', user._id, { maxAge: period, httpOnly: true })
-        res.status(200).json({
-          success: true,
-          message: 'User Login Successfully',
-          user,
-          token
-        })
       }
-    )
-  } catch (error) {
-    handleErrors(error, res)
-  }
-}
-
-
-export const forgetPassword = async (req, res) => {
-  try {
-    const { email } = req.body
-    // check if email exists
-    const existingEmail = await authModel.findOne({email})
-    if(!existingEmail){
-      return res.status(404).json({success: false, message: "User with this email does not exist."})
-    }
-    const token = jwt.sign({email : existingEmail.email, id: existingEmail._id}, process.env.SECRET, {
-      expiresIn: "5m"
     })
-    const link = `${baseUrl}/reset-password/${existingEmail._id}/${token}`
-
-    const subject = 'Reset Your Password'
-    const text = 'Reset Your Password!'
-    const template = 'forgetPassword'
-    const context = {
-      resetLink: link
-    }    
-    await sendEmail(email, text, subject, template, context)
-    res.status(200).json({success: true, message: "Reset link successfully sent, kindly check your email to set a new password"})
+  } catch (error) {
+    res.status(400).json({
+      status: 'Bad request',
+      message: 'Authentication failed',
+      statusCode: 401
+    })
   }
-  catch(error){
-    handleErrors(error, res)
-  }
-}
-
-export const getResetPassword = async (req, res) => {
-try {
-  const {id, token} = req.params
-  const exisintigUser = await authModel.findOne({_id: id})
-  if(!exisintigUser){
-    return res.status(404).json({success: false, message: "User does not exists."})
-  }
-  jwt.verify(token, process.env.SECRET) 
-  res.status(200).json({success: true, message: "Reset password link is valid."})
-}
-catch(error){
-  handleErrors(error, res)
-}
-}
-
-export const postResetPassword = async (req, res) => {
-  try {
-  const {id, token} = req.params
-  const { password } = req.body
-  const exisintigUser = await authModel.findOne({_id: id})
-  if(!exisintigUser){
-    return res.status(404).json({success: false, message: "User does not exists."})
-  }
-  jwt.verify(token, process.env.SECRET) 
-  const hashPassword = await bcrypt.hash(password, 10)  
-  await authModel.updateOne({_id: id}, {
-    $set : {
-      password: hashPassword
-    }
-  })
-  res.status(201).json({success: true, message: "Password changed successfully"})
-}
-catch(error){
-  handleErrors(error, res)
-}
 }

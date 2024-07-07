@@ -1,20 +1,26 @@
-import { createClient } from '@supabase/supabase-js'
-import { Drizzle } from 'drizzle-orm'
-import Pool from 'pg'
+import { createClient } from '@supabase/supabase-js';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import pkg from 'pg';
+import dotenv from 'dotenv';
+dotenv.config()
 
-const { Pool } = pg
+const { Pool } = pkg
 
+const supabaseUrl = process.env.SUPABASE_URL
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
+const dbUrl = process.env.POSTGRESQL_DB
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+if (!supabaseUrl || !supabaseAnonKey || !dbUrl) {
+  throw new Error('Missing required environment variables: SUPABASE_URL, SUPABASE_ANON_KEY, POSTGRESQL_DB')
+}
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 const pool = new Pool({
-  connectionString: supabaseUrl,
+  connectionString: dbUrl,
   ssl: {
     rejectUnauthorized: false
   }
 })
 
-export const drizzle = new Drizzle(pool)
+export const db = drizzle(pool)
