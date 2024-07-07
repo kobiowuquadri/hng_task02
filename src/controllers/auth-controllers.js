@@ -1,4 +1,3 @@
-import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { db } from '../config/db.js';
@@ -22,6 +21,7 @@ export const userRegister = async (req, res) => {
     }).returning().execute()
 
     const userId = user[0].userId
+    console.log(userId)
 
     const orgName = `${firstName}'s Organisation`
     await db.insert(organisations).values({
