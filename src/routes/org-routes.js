@@ -4,6 +4,6 @@ import { getOrg, getOrgById } from "../controllers/org-controller.js";
 
 export const orgRoutes = Router()
 
-orgRoutes.get('org', verify, getOrg)
+orgRoutes.get('organisations', verify, getOrg)
 
-orgRoutes.get('org/:orgId', verify, getOrgById)
+orgRoutes.get('organisations/:orgId', verify, getOrgById)

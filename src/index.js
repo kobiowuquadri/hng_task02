@@ -39,8 +39,8 @@ const corsOptions = {
 app.use(cors(corsOptions))
 
 // routes
-app.use('/api/v1/auth', authRoutes)
-app.use('api/v1/org', orgRoutes)
+app.use('/auth', authRoutes)
+app.use('/api', orgRoutes)
 
 // home
 app.get('/', (req, res) => {

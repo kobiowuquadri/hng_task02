@@ -4,6 +4,6 @@ import { validateUser } from '../../validator/authValidator.js'
 
 export const authRoutes = express.Router()
 
-authRoutes.post('/user-register', validateUser, userRegister)
-authRoutes.post('/user-login', userLogin)
+authRoutes.post('/register', validateUser, userRegister)
+authRoutes.post('/login', userLogin)
 

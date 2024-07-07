@@ -3,16 +3,22 @@ import jwt from 'jsonwebtoken';
 import { db } from '../config/db.js';
 import { User } from '../models/auth-model.js';
 import { organisation } from '../models/org-model.js';
+import { v4 as uuidv4 } from 'uuid';
 
 
 
 
 export const userRegister = async (req, res) => {
   try {
-    const { firstName, lastName, email, password, phone } = req.body    
+    const userId = uuidv4()
+    const { firstName, lastName, email, password, phone } = req.body   
+    // console.log(req.body) 
     const hashedPassword = await bcrypt.hash(password, 10)
 
+    // console.log(userId)
+
     const user = await db.insert(User).values({
+      userId,
       firstName,
       lastName,
       email,
@@ -20,13 +26,11 @@ export const userRegister = async (req, res) => {
       phone
     }).returning().execute()
 
-    const userId = user[0].userId
-    console.log(userId)
-
     const orgName = `${firstName}'s Organisation`
     await db.insert(organisation).values({
       name: orgName,
-      description: `${firstName}'s default organisation`
+      description: `${firstName}'s default organisation`,
+      userId
     }).execute()
 
     const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1h' })
@@ -49,6 +53,7 @@ export const userRegister = async (req, res) => {
     res.status(400).json({
       status: 'Bad request',
       message: 'Registration unsuccessful',
+      msg: error.message,
       statusCode: 400
     })
   }
