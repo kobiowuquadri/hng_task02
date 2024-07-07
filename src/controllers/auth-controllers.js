@@ -2,7 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { db } from '../config/db.js';
-import { users } from '../models/auth-model.js';
+import { User } from '../models/auth-model.js';
 import { organisations } from '../models/org-model.js';
 
 
@@ -13,7 +13,7 @@ export const userRegister = async (req, res) => {
     const { firstName, lastName, email, password, phone } = req.body    
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const user = await db.insert(users).values({
+    const user = await db.insert(User).values({
       firstName,
       lastName,
       email,
@@ -59,7 +59,7 @@ export const userLogin = async (req, res) => {
   try {
     const { email, password } = req.body
     // existing user
-    const user = await db.select(users).where(users.email.equals(email)).execute()
+    const user = await db.select(User).where(User.email.equals(email)).execute()
 
     if (user.length === 0) {
       return res.status(401).json({
