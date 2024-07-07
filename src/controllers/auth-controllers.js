@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { db } from '../config/db.js';
 import { User } from '../models/auth-model.js';
-import { organisations } from '../models/org-model.js';
+import { organisation } from '../models/org-model.js';
 
 
 
@@ -24,7 +24,7 @@ export const userRegister = async (req, res) => {
     console.log(userId)
 
     const orgName = `${firstName}'s Organisation`
-    await db.insert(organisations).values({
+    await db.insert(organisation).values({
       name: orgName,
       description: `${firstName}'s default organisation`
     }).execute()

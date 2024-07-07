@@ -1,33 +1,35 @@
 import express from 'express';
 import { db } from '../config/db.js';
-import organisations from '../models/organisation.js';
-import { authMiddleware } from '../middleware/authMiddleware.js';
+import organisation from '../models/organisation.js';
+import { verify } from '../middlewares/auth-middleware.js';
 
 const router = express.Router();
 
-router.get('/', authMiddleware, async (req, res) => {
+
+
+export const getOrg = async (req, res) => {
   try {
-    const userOrgs = await db.select(organisations).execute()
+    const userOrgs = await db.select(organisation).execute()
     res.status(200).json({
       status: 'success',
-      message: 'Organisations retrieved successfully',
+      message: 'organisation retrieved successfully',
       data: {
-        organisations: userOrgs,
+        organisation: userOrgs,
       },
     })
   } catch (error) {
     res.status(400).json({
       status: 'Bad request',
-      message: 'Failed to retrieve organisations',
+      message: 'Failed to retrieve organisation',
       statusCode: 400
     })
   }
-})
+}
 
 router.get('/:orgId', authMiddleware, async (req, res) => {
   const { orgId } = req.params;
   try {
-    const org = await db.select(organisations).where(organisations.orgId.equals(orgId)).execute();
+    const org = await db.select(organisation).where(organisations.orgId.equals(orgId)).execute();
     if (org.length === 0) {
       return res.status(404).json({
         status: 'Bad request',

@@ -1,7 +1,7 @@
 import { pgTable, varchar, serial } from 'drizzle-orm/pg-core';
 
-export const organisations = pgTable('organisations', {
-  orgId: serial('org_id').primaryKey(),
+export const organisation = pgTable('organisations', {
+  orgId: serial('orgId').primaryKey(),
   name: varchar('name').notNull(),
   description: varchar('description'),
 })
