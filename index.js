@@ -62,6 +62,17 @@ async function testDatabaseConnection() {
 
 testDatabaseConnection();
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`)
-})
+
+let server;
+
+if (process.env.NODE_ENV !== 'test') {
+  server = app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
+
+app.close = () => {
+  server && server.close();
+};
+
+export { app };
