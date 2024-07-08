@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import { db } from '../src/config/db.js';
 import { User } from '../src/models/auth-model.js';
 import { organisation } from '../src/models/org-model.js';
-import { app } from '../index.js';
+import { app } from '../server.js';
 
 describe('Authentication Tests', () => {
   beforeAll(async () => {
