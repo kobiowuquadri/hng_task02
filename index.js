@@ -11,7 +11,7 @@ import { sql } from 'drizzle-orm';
 import { orgRoutes } from './src/routes/org-routes.js';
 import { handleErrors } from './src/middlewares/errorHandler.js';
 
-export const app = express()
+const app = express()
 const port = process.env.PORT || 2000
 
 // helmet to secure app by setting http response headers
@@ -68,3 +68,4 @@ app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 })
 
+export { app }
