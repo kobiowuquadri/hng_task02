@@ -56,14 +56,12 @@ async function testDatabaseConnection() {
     const result = await db.execute(sql`SELECT NOW()`);
     console.log('Database connected successfully');
   } catch (error) {
-    console.error('Database connection error:', error.message);
+    console.error('Database connection error:', error.message)
   }
 }
 
 testDatabaseConnection();
 
-const server = app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
-
-export { app, server };
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`)
+})
