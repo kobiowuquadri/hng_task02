@@ -11,7 +11,7 @@ import { sql } from 'drizzle-orm';
 import { orgRoutes } from './src/routes/org-routes.js';
 import { handleErrors } from './src/middlewares/errorHandler.js';
 
-const app = express()
+export const app = express()
 const port = process.env.PORT || 2000
 
 // helmet to secure app by setting http response headers
@@ -74,5 +74,3 @@ if (process.env.NODE_ENV !== 'test') {
 app.close = () => {
   server && server.close();
 };
-
-export { app };
