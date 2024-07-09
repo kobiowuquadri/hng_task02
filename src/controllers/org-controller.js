@@ -133,47 +133,49 @@ export const createOrg = async (req, res) => {
 }
 
 
-
 export const addUserToOrg = async (req, res) => {
   try {
-    const { orgId } = req.params
-    const { userId } = req.body
+    const { orgId } = req.params;
+    const { userId } = req.body;
 
-    const org = await db.select().from(organisation).where(eq(organisation.orgId, orgId)).execute()
+    // Check if the organisation exists
+    const org = await db.select().from(organisation).where(eq(organisation.orgId, orgId)).execute();
     if (!org || org.length === 0) {
       return res.status(404).json({
         status: 'Not Found',
         message: 'Organisation not found',
         statusCode: 404
-      })
+      });
     }
 
-    // check if the user is already part of the organization
+    // Check if the user is already part of the organisation
     const existingUserOrg = await db.select().from(organisation)
       .where(and(eq(organisation.orgId, orgId), eq(organisation.userId, userId)))
-      .execute()
+      .execute();
     if (existingUserOrg && existingUserOrg.length > 0) {
       return res.status(409).json({
         status: 'Conflict',
         message: 'User is already part of this organization',
         statusCode: 409
-      })
+      });
     }
 
-    await db.insert(organisation).values({
-      orgId,
-      userId
-    }).execute()
+    // Update the organisation to include the new user
+    await db.update(organisation)
+      .set({ userId })
+      .where(eq(organisation.orgId, orgId))
+      .execute();
 
     res.status(200).json({
       status: 'success',
       message: 'User added to organisation successfully',
-    })
+    });
   } catch (error) {
+    console.log(error);
     res.status(400).json({
       status: 'Bad request',
-      message: 'Failed to retrieve organisation',
+      message: 'Failed to add user to organisation',
       statusCode: 400
-    })
+    });
   }
-}
+};
