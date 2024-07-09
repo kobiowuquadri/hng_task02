@@ -50,17 +50,17 @@ app.get('/', (req, res) => {
 // error handler
 app.use(handleErrors)
 
-// Connect to database
+// connect to database
 async function testDatabaseConnection() {
   try {
-    const result = await db.execute(sql`SELECT NOW()`);
-    console.log('Database connected successfully');
+    const result = await db.execute(sql`SELECT NOW()`)
+    console.log('Database connected successfully')
   } catch (error) {
     console.error('Database connection error:', error.message)
   }
 }
 
-testDatabaseConnection();
+testDatabaseConnection()
 
 
 

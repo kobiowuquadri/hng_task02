@@ -29,8 +29,8 @@ export const validateUser = [
           field: err.param,
           message: err.msg,
         })),
-      });
+      })
     }
-    next();
+    next()
   }
-];
+]
